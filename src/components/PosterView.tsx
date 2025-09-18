@@ -45,9 +45,33 @@ export default function PosterView() {
   const logo = ('/logo.png')
   const logoString = safeDecodeURIComponent(searchParams?.get('logo'), logo);
   const theme = safeDecodeURIComponent(searchParams?.get('theme'), 'SpringGradientWave');
+  
+  // 获取自定义宽度和高度参数
+  const customWidth = searchParams?.get('width');
+  const customHeight = searchParams?.get('height');
+  
+  // 解析和验证尺寸参数
+  function parseDimension(value: string | null, defaultValue: number, min: number, max: number): number {
+    if (!value) return defaultValue;
+    const parsed = parseInt(value, 10);
+    if (isNaN(parsed)) return defaultValue;
+    return Math.max(min, Math.min(max, parsed));
+  }
+  
+  const posterWidth = parseDimension(customWidth, 800, 400, 2000);
+  const posterHeight = parseDimension(customHeight, 600, 300, 1500);
+  
+  // 动态计算样式
+  const containerStyle = {
+    display: "inline-block" as const,
+    width: posterWidth + 'px',
+    minHeight: posterHeight + 'px',
+    maxWidth: '100vw',
+    position: 'relative' as const,
+  };
 
   return (
-    <div className="poster-content" style={{display: "inline-block"}}>
+    <div className="poster-content" style={containerStyle}>
           {/* Preview */}
             <Md2Poster theme={theme as IThemeType} >
               <Md2PosterHeader  className="flex justify-center items-center px-4 font-medium text-lg">

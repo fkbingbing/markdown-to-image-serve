@@ -21,6 +21,49 @@ function buildPosterUrl(base: string, params: Record<string, any>) {
   return `${base}${query ? '?' + query : ''}`;
 }
 
+// 密码校验函数
+function verifyPassword(password: string): boolean {
+  const API_PASSWORD = process.env.API_PASSWORD;
+  
+  // 如果没有设置密码，则跳过验证（向后兼容）
+  if (!API_PASSWORD) {
+    return true;
+  }
+  
+  return password === API_PASSWORD;
+}
+
+// 验证和解析宽度参数
+function validateDimensions(width?: any, height?: any): { width: number; height: number } {
+  const defaultWidth = 1200;
+  const defaultHeight = 800;
+  const minWidth = 400;
+  const maxWidth = 3840;
+  const minHeight = 300; 
+  const maxHeight = 2160;
+
+  let validatedWidth = defaultWidth;
+  let validatedHeight = defaultHeight;
+
+  // 验证宽度
+  if (width !== undefined && width !== null) {
+    const parsedWidth = parseInt(width, 10);
+    if (!isNaN(parsedWidth) && parsedWidth >= minWidth && parsedWidth <= maxWidth) {
+      validatedWidth = parsedWidth;
+    }
+  }
+
+  // 验证高度
+  if (height !== undefined && height !== null) {
+    const parsedHeight = parseInt(height, 10);
+    if (!isNaN(parsedHeight) && parsedHeight >= minHeight && parsedHeight <= maxHeight) {
+      validatedHeight = parsedHeight;
+    }
+  }
+
+  return { width: validatedWidth, height: validatedHeight };
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -30,7 +73,35 @@ export default async function handler(
   }
 
   try {
-    const { markdown, header, footer, logo, theme } = req.body;
+    const { 
+      markdown, 
+      header, 
+      footer, 
+      logo, 
+      theme,
+      width,
+      height,
+      password
+    } = req.body;
+
+    // 密码校验
+    if (!verifyPassword(password)) {
+      return res.status(401).json({ 
+        error: "认证失败",
+        message: "请提供正确的API密码" 
+      });
+    }
+
+    // 验证输入参数
+    if (!markdown) {
+      return res.status(400).json({ 
+        error: "参数错误",
+        message: "markdown 参数是必需的" 
+      });
+    }
+
+    // 验证和设置尺寸
+    const dimensions = validateDimensions(width, height);
 
     // 启动浏览器
     // const browser = await puppeteer.launch({ headless: true });
@@ -71,14 +142,16 @@ export default async function handler(
     const page = await browser.newPage();
     console.timeEnd("browser.newPage");
 
-    // 设置视口大小
+    // 设置视口大小 - 使用自定义尺寸
     console.time("setViewport");
-    await page.setViewport({ width: 1200, height: 1600 });
+    await page.setViewport({ 
+      width: Math.max(dimensions.width, 800),  // 确保视口足够大
+      height: Math.max(dimensions.height, 600) 
+    });
     console.timeEnd("setViewport");
 
     // 本地开发环境
-    const baseUrl = "http://localhost:3000";
-    // const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
     const url = buildPosterUrl(
       '/poster',
       {
@@ -87,6 +160,8 @@ export default async function handler(
         footer,
         logo,
         theme,
+        width: dimensions.width,
+        height: dimensions.height,
       }
     );
     const fullUrl = `${baseUrl}${url}`;
@@ -189,13 +264,46 @@ export default async function handler(
     await browser.close();
     console.timeEnd("browser.close");
 
-    // 返回可访问的URL
+    // 返回可访问的URL和详细信息
     const imageUrl = process.env.NODE_ENV === 'production'
       ? `/api/images/${fileName}` // 新的 API 路由来处理图片
       : `/uploads/posters/${fileName}`;
-    res.status(200).json({ url: `${baseUrl}${imageUrl}` });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Failed to generate poster" });
+    
+    const response = {
+      url: `${baseUrl}${imageUrl}`,
+      filename: fileName,
+      dimensions: {
+        width: Math.round(box.width),
+        height: Math.round(box.height),
+        requested: {
+          width: dimensions.width,
+          height: dimensions.height
+        }
+      },
+      fileSize: fs.statSync(savePath).size,
+      generatedAt: new Date().toISOString(),
+      theme: theme || 'SpringGradientWave'
+    };
+    
+    console.log(`✅ 海报生成成功: ${fileName}, 尺寸: ${response.dimensions.width}x${response.dimensions.height}`);
+    res.status(200).json(response);
+    
+  } catch (error: any) {
+    console.error("海报生成失败:", error);
+    
+    // 详细的错误信息
+    let errorMessage = "海报生成失败";
+    if (error.message?.includes("Poster element not found")) {
+      errorMessage = "海报元素未找到，请检查内容格式";
+    } else if (error.message?.includes("Could not get element bounds")) {
+      errorMessage = "无法获取元素边界，请检查内容长度";
+    } else if (error.message?.includes("timeout")) {
+      errorMessage = "页面加载超时，请稍后重试";
+    }
+    
+    res.status(500).json({ 
+      error: errorMessage,
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 }
