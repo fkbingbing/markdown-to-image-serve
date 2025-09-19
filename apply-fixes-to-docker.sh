@@ -16,7 +16,6 @@ echo "🔍 检查修复文件..."
 REQUIRED_FILES=(
     "./src/components/PosterView.tsx"
     "./docker-compose.yml"
-    "./.env.local"
 )
 
 for file in "${REQUIRED_FILES[@]}"; do
