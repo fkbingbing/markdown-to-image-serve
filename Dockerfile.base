@@ -1,7 +1,7 @@
 FROM node:20-slim
 
 # 设置国内 npm 镜像源
-RUN npm config set registry https://registry.npmmirror.com
+RUN npm config set registry https://registry.npmjs.org
 
 # 安装 Chromium 和中文字体（适用于 Puppeteer / Playwright）
 RUN apt-get update \
