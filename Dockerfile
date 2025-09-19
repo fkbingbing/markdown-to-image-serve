@@ -28,7 +28,7 @@ COPY package.json yarn.lock ./
 
 
 # 安装 yarn 包管理器
-RUN npm install -g yarn
+RUN npm install -g yarn --verbose
 
 
 # 创建yarn缓存目录并安装依赖
