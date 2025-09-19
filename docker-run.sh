@@ -8,7 +8,7 @@ echo ""
 
 # 检查本地镜像是否存在
 IMAGE_NAME="markdown-to-image-serve:latest"
-if docker images  ls | grep -q "$IMAGE_NAME"; then
+if docker images | grep -q "$IMAGE_NAME"; then
     echo "✅ 找到本地镜像:"
     docker images | grep "markdown-to-image-serve" | head -1
     echo ""
