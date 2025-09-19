@@ -33,14 +33,12 @@ WORKDIR /app
 COPY package.json yarn.lock ./
 
 
-# 安装 yarn 包管理器
-RUN npm install -g yarn --verbose
+# 检查yarn版本 (基础镜像已预装)
+RUN yarn --version
 
 
-# 创建yarn缓存目录并安装依赖
-RUN mkdir -p $YARN_CACHE_FOLDER && \
-    yarn config set cache-folder $YARN_CACHE_FOLDER && \
-    yarn install --frozen-lockfile --silent --non-interactive
+# 安装依赖
+RUN yarn install --frozen-lockfile --silent
 
 # 复制应用代码
 COPY . .
