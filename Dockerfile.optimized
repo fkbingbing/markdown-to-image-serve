@@ -2,8 +2,8 @@
 # Stage 1: 依赖安装阶段
 FROM wxingheng/node-chrome-base:latest AS dependencies
 
-# 安装 yarn
-RUN npm install -g yarn
+# 检查yarn (基础镜像已预装)
+RUN yarn --version
 
 # 设置工作目录
 WORKDIR /app
@@ -41,8 +41,8 @@ RUN echo "开始构建..." && \
 # Stage 3: 生产镜像
 FROM wxingheng/node-chrome-base:latest AS production
 
-# 安装 yarn（生产环境也需要）
-RUN npm install -g yarn
+# 检查yarn (基础镜像已预装)
+RUN yarn --version
 
 # 设置工作目录
 WORKDIR /app

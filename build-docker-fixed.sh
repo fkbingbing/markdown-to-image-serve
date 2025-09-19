@@ -24,54 +24,29 @@ echo ""
 
 # 选择构建方式
 echo "请选择构建方式:"
-echo "1. 标准构建 (使用yarn, 推荐)"
-echo "2. 多阶段构建 (更小的镜像)"
-echo "3. 简单构建 (兼容性最好)"
+echo "1. 简单构建 (推荐, 最稳定)"
+echo "2. 标准构建 (功能完整)"
+echo "3. 多阶段构建 (最小镜像)"
 echo ""
-read -p "请输入选择 (1-3): " choice
+read -p "请输入选择 (1-3, 默认1): " choice
+choice=${choice:-1}
 
 case $choice in
     1)
+        echo "🔨 使用简单构建方式 (推荐)..."
+        DOCKERFILE="Dockerfile.simple"
+        ;;
+    2)
         echo "🔨 使用标准构建方式..."
         DOCKERFILE="Dockerfile"
         ;;
-    2)
+    3)
         echo "🔨 使用多阶段构建方式..."
         DOCKERFILE="Dockerfile.optimized"
         ;;
-    3)
-        echo "🔨 使用简单构建方式..."
-        # 创建简单的Dockerfile
-        cat > Dockerfile.simple << 'EOF'
-FROM wxingheng/node-chrome-base:latest
-
-# 设置工作目录
-WORKDIR /app
-
-# 安装yarn
-RUN npm install -g yarn
-
-# 复制依赖文件
-COPY package.json yarn.lock ./
-
-# 安装依赖
-RUN yarn install
-
-# 复制源码
-COPY . .
-
-# 构建应用
-RUN yarn build
-
-EXPOSE 3000
-
-CMD ["yarn", "start"]
-EOF
-        DOCKERFILE="Dockerfile.simple"
-        ;;
     *)
-        echo "❌ 无效选择"
-        exit 1
+        echo "❌ 无效选择，使用默认选项 (简单构建)"
+        DOCKERFILE="Dockerfile.simple"
         ;;
 esac
 
@@ -131,9 +106,6 @@ else
     exit 1
 fi
 
-# 清理临时文件
-if [ -f "Dockerfile.simple" ]; then
-    rm -f Dockerfile.simple
-fi
+# 清理完成 (Dockerfile.simple 是永久文件，不删除)
 
 echo "🎉 脚本执行完成!"
