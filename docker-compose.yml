@@ -2,10 +2,7 @@ version: '0.1'
 
 services:
   app:
-    # 使用本地构建
-    # build:
-      # context: .
-    # 使用已有的远程镜像
+    # 使用本地已构建的镜像 (159250f27fa8, 3.55GB)
     image: markdown-to-image-serve:latest
     platform: linux/amd64
     ports:
@@ -16,9 +13,14 @@ services:
       - CHROME_PATH=/usr/bin/google-chrome-unstable
       - API_PASSWORD=123456
     volumes:
-      - .:/app
-      - /app/node_modules
-      # 指定缓存目录, 避免每次重新构建
-      - /app/.next 
-      # 需要将容器中的文件挂载到宿主机
-      - ./public/uploads/posters:/tmp/uploads/posters
+      # 生成的海报图片目录挂载
+      - ./public/uploads/posters:/app/public/uploads/posters
+      # 上传目录挂载
+      - ./uploads:/app/uploads
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/hello.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
