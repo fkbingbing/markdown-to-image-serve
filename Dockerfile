@@ -34,9 +34,11 @@ WORKDIR /app
 COPY package.json yarn.lock ./
 
 
-# 检查yarn版本和配置官方源
+# 检查yarn版本，清除镜像源配置，强制官方源
 RUN yarn --version && \
+    rm -f /root/.npmrc /usr/local/share/.yarnrc /usr/local/etc/npmrc && \
     yarn config set registry https://registry.npmjs.org/ && \
+    npm config set registry https://registry.npmjs.org/ && \
     yarn config list
 
 # 安装依赖 - 强制使用官方源
