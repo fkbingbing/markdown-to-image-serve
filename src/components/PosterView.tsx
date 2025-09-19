@@ -69,12 +69,46 @@ export default function PosterView() {
     display: "inline-block" as const,
     width: posterWidth + 'px',
     minHeight: posterHeight + 'px',
-    maxWidth: '100vw',
     position: 'relative' as const,
+    // 移除maxWidth限制，避免文本截断
+    wordWrap: 'break-word' as const,
+    overflowWrap: 'break-word' as const,
   };
 
   return (
     <div className="poster-content" style={containerStyle}>
+      {/* 强制覆盖 Md2Poster 组件的宽度限制 */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          .poster-content .md2-poster,
+          .poster-content .md2-poster > div,
+          .poster-content .md2-poster-content,
+          .poster-content [class*="poster"] {
+            max-width: none !important;
+            width: ${posterWidth}px !important;
+            box-sizing: border-box !important;
+          }
+          .poster-content .md2-poster-content > div,
+          .poster-content .md2-poster-content * {
+            max-width: none !important;
+            word-wrap: break-word !important;
+            overflow-wrap: break-word !important;
+          }
+          /* 修复代码块宽度限制 - 这是关键修复 */
+          .poster-content pre,
+          .poster-content code,
+          .poster-content .hljs,
+          .poster-content [class*="code"],
+          .poster-content [class*="highlight"] {
+            max-width: none !important;
+            width: 100% !important;
+            white-space: pre-wrap !important;
+            word-wrap: break-word !important;
+            overflow-wrap: break-word !important;
+            overflow-x: visible !important;
+          }
+        `
+      }} />
           {/* Preview */}
             <Md2Poster theme={theme as IThemeType} size={posterSize as any}>
               <Md2PosterHeader  className="flex justify-center items-center px-4 font-medium text-lg">
