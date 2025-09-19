@@ -26,7 +26,6 @@ echo ""
 docker run --rm -it \
     -p 3000:3000 \
     -v "$(pwd)/fix-deps.sh:/app/fix-deps.sh:ro" \
-    -v "$(pwd)/package.json:/app/package.json:ro" \
     -e NODE_ENV=production \
     -e API_PASSWORD=123456 \
     markdown-to-image-serve:latest \
