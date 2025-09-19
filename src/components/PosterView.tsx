@@ -61,6 +61,9 @@ export default function PosterView() {
   const posterWidth = parseDimension(customWidth, 800, 400, 2000);
   const posterHeight = parseDimension(customHeight, 600, 300, 1500);
   
+  // 根据宽度判断应该使用的尺寸
+  const posterSize = posterWidth >= 1000 ? 'desktop' : posterWidth >= 700 ? 'tablet' : 'mobile';
+  
   // 动态计算样式
   const containerStyle = {
     display: "inline-block" as const,
@@ -73,7 +76,7 @@ export default function PosterView() {
   return (
     <div className="poster-content" style={containerStyle}>
           {/* Preview */}
-            <Md2Poster theme={theme as IThemeType} >
+            <Md2Poster theme={theme as IThemeType} size={posterSize as any}>
               <Md2PosterHeader  className="flex justify-center items-center px-4 font-medium text-lg">
                 <span>{headerString || new Date().toISOString().slice(0, 10)} </span>
               </Md2PosterHeader>
