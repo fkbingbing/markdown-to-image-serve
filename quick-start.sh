@@ -21,8 +21,9 @@ done
 # 检查Docker镜像
 echo ""
 echo "🐳 检查Docker镜像..."
-if docker images | grep -q "markdown-to-image-serve.*latest"; then
-    echo "✅ 找到本地镜像: markdown-to-image-serve:latest"
+if docker images | grep -q "markdown-to-image-serve"; then
+    echo "✅ 找到本地镜像:"
+    docker images | grep "markdown-to-image-serve" | head -1
 else
     echo "❌ 未找到镜像: markdown-to-image-serve:latest"
     echo "请先构建镜像: ./force-rebuild.sh"
