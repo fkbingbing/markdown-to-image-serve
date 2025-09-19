@@ -81,19 +81,37 @@ echo "📋 构建信息:"
 echo "  - Dockerfile: ${DOCKERFILE}"
 echo "  - 镜像名称: ${FULL_TAG}"
 echo "  - 缓存策略: 完全禁用 (--no-cache)"
-echo "  - 进度显示: 详细模式 (--progress=plain)"
+echo "  - Docker 版本兼容性: 自动检测"
 echo ""
 
 # 开始构建
 echo "⏰ 构建开始时间: $(date)"
 START_TIME=$(date +%s)
 
+# 检测 Docker 版本和 buildx 支持
+DOCKER_VERSION=$(docker --version | grep -oE '[0-9]+\.[0-9]+' | head -1)
+BUILD_ARGS="--no-cache"
+
+# 检查是否支持 --progress 参数 (Docker 18.09+)
+if docker build --help | grep -q "\--progress"; then
+    echo "✅ 支持 --progress 参数，启用详细输出"
+    BUILD_ARGS="${BUILD_ARGS} --progress=plain"
+else
+    echo "ℹ️  Docker 版本较老，跳过 --progress 参数"
+fi
+
+# 检查是否支持 BuildKit
+if docker build --help | grep -q "buildkit"; then
+    BUILD_ARGS="${BUILD_ARGS} --build-arg BUILDKIT_INLINE_CACHE=0"
+fi
+
+echo "🔨 执行构建命令: docker build -f ${DOCKERFILE} -t ${FULL_TAG} ${BUILD_ARGS} ."
+echo ""
+
 if docker build \
     -f ${DOCKERFILE} \
     -t ${FULL_TAG} \
-    --no-cache \
-    --progress=plain \
-    --build-arg BUILDKIT_INLINE_CACHE=0 \
+    ${BUILD_ARGS} \
     . ; then
     
     END_TIME=$(date +%s)
