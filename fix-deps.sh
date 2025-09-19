@@ -4,36 +4,64 @@ set -e
 
 echo "🔧 检查和修复依赖..."
 
-# 检查是否需要安装MDX依赖
-if ! yarn list @next/mdx >/dev/null 2>&1; then
-    echo "📦 发现 @next/mdx 缺失，正在安装..."
+# 更准确的依赖检查方法 - 直接检查node_modules目录
+check_dep() {
+    local dep_name="$1"
+    if [ -d "/app/node_modules/$dep_name" ] && [ -f "/app/node_modules/$dep_name/package.json" ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# 必需的MDX依赖列表
+REQUIRED_DEPS=(
+    "@next/mdx@^14.2.3"
+    "@mdx-js/loader@^3.0.1" 
+    "@mdx-js/react@^3.0.1"
+    "@types/mdx@^2.0.13"
+)
+
+MISSING_DEPS=()
+
+# 检查每个依赖
+for dep_spec in "${REQUIRED_DEPS[@]}"; do
+    dep_name=$(echo "$dep_spec" | cut -d'@' -f1-2)  # 处理@scope/package的情况
+    if ! check_dep "$dep_name"; then
+        echo "❌ 缺失依赖: $dep_name"
+        MISSING_DEPS+=("$dep_spec")
+    else
+        echo "✅ 依赖存在: $dep_name"
+    fi
+done
+
+# 如果有缺失的依赖，安装它们
+if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
+    echo ""
+    echo "📦 安装缺失的依赖: ${MISSING_DEPS[*]}"
+    echo "🌐 使用官方npm源: https://registry.npmjs.org/"
     
-    # 临时安装缺失的依赖
-    yarn add @next/mdx@^14.2.3 @mdx-js/loader@^3.0.1 @mdx-js/react@^3.0.1 @types/mdx@^2.0.13 --registry https://registry.npmjs.org/
+    # 确保使用官方源并安装依赖
+    yarn config set registry https://registry.npmjs.org/
+    yarn add "${MISSING_DEPS[@]}" --no-lockfile --ignore-engines
     
     echo "✅ 依赖安装完成"
 else
-    echo "✅ @next/mdx 依赖已存在"
+    echo "✅ 所有MDX依赖都已存在"
 fi
 
-# 检查其他可能缺失的依赖
-echo "🔍 检查其他依赖..."
-MISSING_DEPS=()
-
-if ! yarn list @mdx-js/loader >/dev/null 2>&1; then
-    MISSING_DEPS+=("@mdx-js/loader@^3.0.1")
+# 最终验证 - 尝试require关键依赖
+echo ""
+echo "🔍 最终验证依赖可用性..."
+if node -e "require('@next/mdx')" 2>/dev/null; then
+    echo "✅ @next/mdx 可以正常加载"
+else
+    echo "⚠️  @next/mdx 加载测试失败，尝试强制重新安装..."
+    yarn add @next/mdx@^14.2.3 --force --no-lockfile --ignore-engines --registry https://registry.npmjs.org/
 fi
 
-if ! yarn list @mdx-js/react >/dev/null 2>&1; then
-    MISSING_DEPS+=("@mdx-js/react@^3.0.1")
-fi
-
-if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
-    echo "📦 安装缺失的依赖: ${MISSING_DEPS[*]}"
-    yarn add "${MISSING_DEPS[@]}" --registry https://registry.npmjs.org/
-fi
-
-echo "🎉 依赖检查完成!"
+echo ""
+echo "🎉 依赖检查和修复完成!"
 echo "🚀 启动 Next.js 服务..."
 
 # 启动应用
