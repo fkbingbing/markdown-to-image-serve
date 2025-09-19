@@ -19,8 +19,6 @@ services:
       - ./uploads:/app/uploads
       # 挂载依赖修复脚本
       - ./fix-deps.sh:/app/fix-deps.sh:ro
-      # 挂载更新的 package.json (包含修复的依赖)
-      - ./package.json:/app/package.json:ro
     # 使用修复脚本启动
     command: ["/app/fix-deps.sh", "yarn", "start"]
     restart: unless-stopped

@@ -61,7 +61,6 @@ case $mode in
             -v "$(pwd)/public/uploads/posters:/app/public/uploads/posters" \
             -v "$(pwd)/uploads:/app/uploads" \
             -v "$(pwd)/fix-deps.sh:/app/fix-deps.sh:ro" \
-            -v "$(pwd)/package.json:/app/package.json:ro" \
             $IMAGE_NAME \
             /app/fix-deps.sh yarn start
         ;;
@@ -78,7 +77,6 @@ case $mode in
             -v "$(pwd)/public/uploads/posters:/app/public/uploads/posters" \
             -v "$(pwd)/uploads:/app/uploads" \
             -v "$(pwd)/fix-deps.sh:/app/fix-deps.sh:ro" \
-            -v "$(pwd)/package.json:/app/package.json:ro" \
             $IMAGE_NAME \
             /app/fix-deps.sh yarn start)
         
