@@ -1,0 +1,77 @@
+# 多阶段构建 Dockerfile - 优化版本
+# Stage 1: 依赖安装阶段
+FROM wxingheng/node-chrome-base:latest AS dependencies
+
+# 安装 yarn
+RUN npm install -g yarn
+
+# 设置工作目录
+WORKDIR /app
+
+# 复制依赖文件
+COPY package.json yarn.lock ./
+
+# 配置 yarn
+ENV YARN_CACHE_FOLDER=/yarn-cache
+ENV YARN_NETWORK_TIMEOUT=300000
+ENV YARN_REGISTRY=https://registry.npmjs.org/
+
+# 安装所有依赖（包括dev依赖）
+RUN mkdir -p $YARN_CACHE_FOLDER && \
+    yarn config set cache-folder $YARN_CACHE_FOLDER && \
+    yarn install --frozen-lockfile --silent
+
+# Stage 2: 构建阶段
+FROM dependencies AS builder
+
+# 复制所有源码
+COPY . .
+
+# Next.js 构建配置
+ENV NODE_OPTIONS="--max-old-space-size=8192"
+ENV GENERATE_SOURCEMAP=false
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
+
+# 构建应用
+RUN echo "开始构建..." && \
+    yarn build && \
+    echo "构建完成"
+
+# Stage 3: 生产镜像
+FROM wxingheng/node-chrome-base:latest AS production
+
+# 安装 yarn（生产环境也需要）
+RUN npm install -g yarn
+
+# 设置工作目录
+WORKDIR /app
+
+# 设置环境变量
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+
+# 创建非root用户
+RUN addgroup --gid 1001 --system nodejs && \
+    adduser --system --uid 1001 nextjs
+
+# 复制package.json和yarn.lock
+COPY --from=builder /app/package.json /app/yarn.lock ./
+
+# 只安装生产依赖
+RUN yarn install --production --frozen-lockfile --silent && \
+    yarn cache clean
+
+# 复制构建产物
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+
+# 切换到非root用户
+USER nextjs
+
+EXPOSE 3000
+
+# 启动应用
+CMD ["node", "server.js"]
