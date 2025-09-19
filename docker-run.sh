@@ -8,7 +8,7 @@ echo ""
 
 # 检查本地镜像是否存在
 IMAGE_NAME="markdown-to-image-serve:latest"
-if docker images | grep -q "$IMAGE_NAME"; then
+if docker images  ls | grep -q "$IMAGE_NAME"; then
     echo "✅ 找到本地镜像:"
     docker images | grep "markdown-to-image-serve" | head -1
     echo ""
@@ -66,7 +66,7 @@ case $mode in
             /app/fix-deps.sh yarn start
         ;;
     2)
-        echo "🚀 后台启动服务..."
+        echo "🚀 后台启动服务（含依赖修复）..."
         CONTAINER_ID=$(docker run -d \
             --name markdown-to-image-serve \
             -p 3000:3000 \
@@ -74,10 +74,13 @@ case $mode in
             -e NODE_ENV=production \
             -e NEXT_PUBLIC_BASE_URL=http://localhost:3000 \
             -e CHROME_PATH=/usr/bin/google-chrome-unstable \
-            -e API_PASSWORD=your_secure_password_here \
+            -e API_PASSWORD=123456 \
             -v "$(pwd)/public/uploads/posters:/app/public/uploads/posters" \
             -v "$(pwd)/uploads:/app/uploads" \
-            $IMAGE_NAME)
+            -v "$(pwd)/fix-deps.sh:/app/fix-deps.sh:ro" \
+            -v "$(pwd)/package.json:/app/package.json:ro" \
+            $IMAGE_NAME \
+            /app/fix-deps.sh yarn start)
         
         echo "✅ 服务已启动"
         echo "🆔 容器ID: $CONTAINER_ID"
