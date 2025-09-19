@@ -25,11 +25,10 @@ echo ""
 # 选择构建方式
 echo "请选择构建方式:"
 echo "1. 简单构建 (推荐, 最稳定)"
-echo "2. 标准构建 (功能完整)" 
+echo "2. 标准构建 (功能完整)"
 echo "3. 多阶段构建 (最小镜像)"
-echo "4. 🔥 强制重建 (清除缓存, 解决Registry问题)"
 echo ""
-read -p "请输入选择 (1-4, 默认1): " choice
+read -p "请输入选择 (1-3, 默认1): " choice
 choice=${choice:-1}
 
 case $choice in
@@ -44,15 +43,6 @@ case $choice in
     3)
         echo "🔨 使用多阶段构建方式..."
         DOCKERFILE="Dockerfile.optimized"
-        ;;
-    4)
-        echo "🔥 转到强制重建模式..."
-        echo "   - 这将清除所有Docker缓存"
-        echo "   - 强制重新下载依赖"
-        echo "   - 解决Registry配置问题"
-        echo ""
-        exec ./force-rebuild.sh
-        exit 0
         ;;
     *)
         echo "❌ 无效选择，使用默认选项 (简单构建)"
@@ -72,30 +62,15 @@ echo "🔨 开始构建Docker镜像..."
 echo "⏱️  预计需要5-10分钟，请耐心等待..."
 echo ""
 
-# 检测 Docker 版本兼容性并构建
-BUILD_ARGS="--no-cache -f ${DOCKERFILE} -t ${FULL_TAG} -t ${IMAGE_NAME}:latest"
-
-# 检查是否支持 --platform 参数
-if docker build --help | grep -q "\--platform"; then
-    echo "ℹ️  添加平台参数: --platform linux/amd64"
-    BUILD_ARGS="${BUILD_ARGS} --platform linux/amd64"
-else
-    echo "ℹ️  跳过 --platform 参数 (Docker 版本较老)"
-fi
-
-# 检查是否支持 --progress 参数
-if docker build --help | grep -q "\--progress"; then
-    echo "ℹ️  添加进度显示: --progress=plain"
-    BUILD_ARGS="${BUILD_ARGS} --progress=plain"
-else
-    echo "ℹ️  跳过 --progress 参数 (Docker 版本较老)"
-fi
-
-echo "🔨 执行构建命令: docker build ${BUILD_ARGS} ."
-echo ""
-
-# 使用兼容性构建命令
-eval "docker build ${BUILD_ARGS} ."
+# 使用--no-cache确保获取最新代码
+docker build \
+    --no-cache \
+    --platform linux/amd64 \
+    --progress=plain \
+    -f "${DOCKERFILE}" \
+    -t "${FULL_TAG}" \
+    -t "${IMAGE_NAME}:latest" \
+    .
 
 if [ $? -eq 0 ]; then
     echo ""
