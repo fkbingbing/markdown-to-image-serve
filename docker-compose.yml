@@ -6,7 +6,7 @@ services:
     # build:
       # context: .
     # 使用已有的远程镜像
-    image: wxingheng/markdown-to-image-serve:0.0.1
+    image: markdown-to-image-serve:latest
     platform: linux/amd64
     ports:
       - "3000:3000"
@@ -14,7 +14,7 @@ services:
       - NODE_ENV=production
       - NEXT_PUBLIC_BASE_URL=http://localhost:3000
       - CHROME_PATH=/usr/bin/google-chrome-unstable
-      - API_PASSWORD=your_secure_password_here
+      - API_PASSWORD=123456
     volumes:
       - .:/app
       - /app/node_modules
