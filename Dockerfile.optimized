@@ -2,8 +2,14 @@
 # Stage 1: 依赖安装阶段
 FROM wxingheng/node-chrome-base:latest AS dependencies
 
-# 检查yarn (基础镜像已预装)
-RUN yarn --version
+# 强制使用官方npm源
+ENV NPM_CONFIG_REGISTRY=https://registry.npmjs.org/
+ENV YARN_REGISTRY=https://registry.npmjs.org/
+
+# 检查yarn并配置官方源
+RUN yarn --version && \
+    yarn config set registry https://registry.npmjs.org/ && \
+    yarn config list
 
 # 设置工作目录
 WORKDIR /app
@@ -16,10 +22,10 @@ ENV YARN_CACHE_FOLDER=/yarn-cache
 ENV YARN_NETWORK_TIMEOUT=300000
 ENV YARN_REGISTRY=https://registry.npmjs.org/
 
-# 安装所有依赖（包括dev依赖）
+# 安装所有依赖（包括dev依赖）- 强制使用官方源
 RUN mkdir -p $YARN_CACHE_FOLDER && \
     yarn config set cache-folder $YARN_CACHE_FOLDER && \
-    yarn install --frozen-lockfile --silent
+    yarn install --frozen-lockfile --registry https://registry.npmjs.org/ --verbose
 
 # Stage 2: 构建阶段
 FROM dependencies AS builder
@@ -41,8 +47,9 @@ RUN echo "开始构建..." && \
 # Stage 3: 生产镜像
 FROM wxingheng/node-chrome-base:latest AS production
 
-# 检查yarn (基础镜像已预装)
-RUN yarn --version
+# 检查yarn并配置官方源 (基础镜像已预装)
+RUN yarn --version && \
+    yarn config set registry https://registry.npmjs.org/
 
 # 设置工作目录
 WORKDIR /app
@@ -59,8 +66,8 @@ RUN addgroup --gid 1001 --system nodejs && \
 # 复制package.json和yarn.lock
 COPY --from=builder /app/package.json /app/yarn.lock ./
 
-# 只安装生产依赖
-RUN yarn install --production --frozen-lockfile --silent && \
+# 只安装生产依赖 - 强制使用官方源
+RUN yarn install --production --frozen-lockfile --registry https://registry.npmjs.org/ --verbose && \
     yarn cache clean
 
 # 复制构建产物

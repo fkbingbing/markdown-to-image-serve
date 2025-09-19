@@ -8,10 +8,11 @@ ENV NPM_CONFIG_FETCH_RETRY_FACTOR=3
 ENV NPM_CONFIG_FETCH_RETRY_MINTIMEOUT=30000
 ENV NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=120000
 ENV NPM_CONFIG_TIMEOUT=600000
-# Yarn 配置优化
+# Yarn 配置优化 - 强制使用官方源
 ENV YARN_REGISTRY=https://registry.npmjs.org/
 ENV YARN_CACHE_FOLDER=/yarn-cache
 ENV YARN_NETWORK_TIMEOUT=300000
+ENV NPM_CONFIG_REGISTRY=https://registry.npmjs.org/
 
 # Next.js 构建优化配置
 ENV NODE_OPTIONS="--max-old-space-size=6144 --max-semi-space-size=1024"
@@ -33,12 +34,13 @@ WORKDIR /app
 COPY package.json yarn.lock ./
 
 
-# 检查yarn版本 (基础镜像已预装)
-RUN yarn --version
+# 检查yarn版本和配置官方源
+RUN yarn --version && \
+    yarn config set registry https://registry.npmjs.org/ && \
+    yarn config list
 
-
-# 安装依赖
-RUN yarn install --frozen-lockfile --silent --verbose
+# 安装依赖 - 强制使用官方源
+RUN yarn install --frozen-lockfile --registry https://registry.npmjs.org/ --verbose
 
 # 复制应用代码
 COPY . .
@@ -51,7 +53,7 @@ RUN timeout 600 yarn build --verbose || \
 # 清理不必要的文件并保留生产依赖
 RUN rm -rf node_modules/.cache && \
     rm -rf .next/cache && \
-    yarn install --production --frozen-lockfile --silent --verbose
+    yarn install --production --frozen-lockfile --registry https://registry.npmjs.org/ --verbose
 
 EXPOSE 3000
 

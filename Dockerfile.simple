@@ -5,6 +5,9 @@ FROM wxingheng/node-chrome-base:latest
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS="--max-old-space-size=4096"
+# 强制使用官方npm源
+ENV NPM_CONFIG_REGISTRY=https://registry.npmjs.org/
+ENV YARN_REGISTRY=https://registry.npmjs.org/
 
 # 设置工作目录
 WORKDIR /app
@@ -12,9 +15,11 @@ WORKDIR /app
 # 复制依赖文件
 COPY package.json yarn.lock ./
 
-# 确认yarn可用并安装依赖
+# 确认yarn可用，配置官方源并安装依赖
 RUN yarn --version && \
-    yarn install --frozen-lockfile --production=false --verbose
+    yarn config set registry https://registry.npmjs.org/ && \
+    yarn config list && \
+    yarn install --frozen-lockfile --production=false --registry https://registry.npmjs.org/ --verbose
 
 # 复制源代码
 COPY . .
@@ -23,7 +28,7 @@ COPY . .
 RUN yarn build --verbose
 
 # 清理开发依赖
-RUN yarn install --production --frozen-lockfile --verbose && \
+RUN yarn install --production --frozen-lockfile --registry https://registry.npmjs.org/ --verbose && \
     yarn cache clean --verbose
 
 EXPOSE 3000
