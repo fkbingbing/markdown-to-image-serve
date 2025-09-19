@@ -34,15 +34,22 @@ WORKDIR /app
 COPY package.json yarn.lock ./
 
 
-# 检查yarn版本，清除镜像源配置，强制官方源
+# 强力修复：清除配置文件，重置配置，立即安装依赖（在同一RUN命令中）
 RUN yarn --version && \
-    rm -f /root/.npmrc /usr/local/share/.yarnrc /usr/local/etc/npmrc && \
-    yarn config set registry https://registry.npmjs.org/ && \
+    echo "=== 清除前检查 ===" && \
+    ls -la /root/.npmrc /usr/local/share/.yarnrc 2>/dev/null || echo "No config files" && \
+    echo "=== 开始清除配置文件 ===" && \
+    rm -f /root/.npmrc /usr/local/share/.yarnrc /usr/local/etc/npmrc /usr/local/etc/yarnrc && \
+    rm -f /app/.npmrc /app/.yarnrc && \
+    echo "=== 重置npm和yarn配置 ===" && \
     npm config set registry https://registry.npmjs.org/ && \
-    yarn config list
-
-# 安装依赖 - 强制使用官方源
-RUN yarn install --frozen-lockfile --registry https://registry.npmjs.org/ --verbose
+    yarn config set registry https://registry.npmjs.org/ && \
+    echo "=== 验证配置 ===" && \
+    npm config get registry && \
+    yarn config get registry && \
+    yarn config list | grep registry && \
+    echo "=== 开始安装依赖 ===" && \
+    yarn install --frozen-lockfile --registry https://registry.npmjs.org/ --verbose
 
 # 复制应用代码
 COPY . .
