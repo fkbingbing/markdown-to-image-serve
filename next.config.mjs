@@ -5,8 +5,7 @@ const nextConfig = {
   // Configure `pageExtensions` to include markdown and MDX files
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
   
-  // 启用 standalone 输出模式以支持多阶段Docker构建
-  output: 'standalone',
+  // output: 'standalone', // 如需Docker部署可取消注释
   
   // 实验性功能配置
   experimental: {

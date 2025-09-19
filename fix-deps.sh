@@ -62,7 +62,30 @@ fi
 
 echo ""
 echo "🎉 依赖检查和修复完成!"
-echo "🚀 启动 Next.js 服务..."
 
-# 启动应用
-exec "$@"
+# 智能启动模式检测
+echo "🔍 检测启动模式..."
+
+# 检查是否存在 standalone 构建
+if [ -f "/app/.next/standalone/server.js" ]; then
+    echo "✅ 发现 standalone 构建，使用生产模式启动"
+    echo "🚀 启动 Next.js 服务 (standalone 模式)..."
+    # 复制静态资源到 standalone 目录
+    if [ -d "/app/.next/static" ] && [ ! -d "/app/.next/standalone/.next/static" ]; then
+        echo "📁 复制静态资源..."
+        cp -r /app/.next/static /app/.next/standalone/.next/
+    fi
+    if [ -d "/app/public" ] && [ ! -d "/app/.next/standalone/public" ]; then
+        echo "📁 复制公共资源..."
+        cp -r /app/public /app/.next/standalone/
+    fi
+    cd /app/.next/standalone
+    exec node server.js
+elif [ "$1" = "npm" ] || [ "$1" = "yarn" ] || [ "$1" = "node" ]; then
+    echo "🚀 使用传入的命令启动: $@"
+    exec "$@"
+else
+    echo "⚠️  未找到 standalone 构建，使用开发模式"
+    echo "🚀 启动 Next.js 服务 (开发模式)..."
+    exec npm run dev
+fi
