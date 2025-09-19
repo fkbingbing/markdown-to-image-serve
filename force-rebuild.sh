@@ -17,9 +17,10 @@ echo ""
 # 选择构建方式
 echo "请选择构建方式:"
 echo "1. 简单构建 (推荐, 最稳定)"
-echo "2. 标准构建"
+echo "2. 标准构建 (功能完整)"
+echo "3. 跳过补丁构建 (如果patch-package有问题)"
 echo ""
-read -p "请输入选择 (1-2, 默认1): " choice
+read -p "请输入选择 (1-3, 默认1): " choice
 choice=${choice:-1}
 
 case $choice in
@@ -30,6 +31,11 @@ case $choice in
     2)
         echo "🔨 使用标准构建方式 (强制重建)..."
         DOCKERFILE="Dockerfile"
+        ;;
+    3)
+        echo "🔨 使用跳过补丁构建方式 (强制重建)..."
+        echo "⚠️  注意：这将跳过 patch-package，可能影响功能"
+        DOCKERFILE="Dockerfile.no-patch"
         ;;
     *)
         echo "❌ 无效选择，使用默认选项 (简单构建)"
@@ -139,9 +145,10 @@ else
     echo "🔍 故障排除建议:"
     echo "  1. 检查网络连接到 registry.npmjs.org"
     echo "  2. 确保Docker有足够磁盘空间 (推荐10GB+)"
-    echo "  3. 查看完整构建日志分析具体错误"
-    echo "  4. 尝试重启Docker服务"
-    echo "  5. 参考故障排除指南: DOCKER_TROUBLESHOOTING.md"
+    echo "  3. 如果是 patch-package 错误，重新运行并选择 '3' (跳过补丁)"
+    echo "  4. 查看完整构建日志分析具体错误"
+    echo "  5. 尝试重启Docker服务"
+    echo "  6. 参考故障排除指南: DOCKER_TROUBLESHOOTING.md 和 PATCH_PACKAGE_FIX.md"
     echo ""
     exit 1
 fi

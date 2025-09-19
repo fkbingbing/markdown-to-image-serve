@@ -48,8 +48,12 @@ RUN yarn --version && \
     npm config get registry && \
     yarn config get registry && \
     yarn config list | grep registry && \
-    echo "=== 开始安装依赖 ===" && \
-    yarn install --frozen-lockfile --registry https://registry.npmjs.org/ --verbose
+    echo "=== 开始安装依赖（包括开发依赖）===" && \
+    yarn install --frozen-lockfile --production=false --registry https://registry.npmjs.org/ --verbose && \
+    echo "=== 验证 patch-package 可用性 ===" && \
+    (yarn list patch-package || echo "patch-package not found, installing globally...") && \
+    (command -v patch-package >/dev/null || yarn global add patch-package@8.0.0 --registry https://registry.npmjs.org/) && \
+    echo "patch-package version: $(yarn patch-package --version 2>/dev/null || echo 'using global')"
 
 # 复制应用代码
 COPY . .

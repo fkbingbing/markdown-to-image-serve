@@ -1,19 +1,24 @@
-# 简化版 Dockerfile - 专注核心功能
+# 简化版 Dockerfile - 跳过 patch-package（应急方案）
 FROM wxingheng/node-chrome-base:latest
+
+# 强制使用官方npm源
+ENV NPM_CONFIG_REGISTRY=https://registry.npmjs.org/
+ENV YARN_REGISTRY=https://registry.npmjs.org/
 
 # 基础环境配置
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS="--max-old-space-size=4096"
-# 强制使用官方npm源
-ENV NPM_CONFIG_REGISTRY=https://registry.npmjs.org/
-ENV YARN_REGISTRY=https://registry.npmjs.org/
 
 # 设置工作目录
 WORKDIR /app
 
 # 复制依赖文件
 COPY package.json yarn.lock ./
+
+# 临时修改 package.json 移除 postinstall 脚本
+RUN cp package.json package.json.backup && \
+    node -e "const pkg=require('./package.json'); delete pkg.scripts.postinstall; require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2));"
 
 # 强力修复：清除配置文件，重置配置，立即安装依赖（在同一RUN命令中）
 RUN yarn --version && \
@@ -29,12 +34,18 @@ RUN yarn --version && \
     npm config get registry && \
     yarn config get registry && \
     yarn config list | grep registry && \
-    echo "=== 开始安装依赖（包括开发依赖）===" && \
-    yarn install --frozen-lockfile --production=false --registry https://registry.npmjs.org/ --verbose && \
-    echo "=== 验证 patch-package 可用性 ===" && \
-    (yarn list patch-package || echo "patch-package not found, installing globally...") && \
-    (command -v patch-package >/dev/null || yarn global add patch-package@8.0.0 --registry https://registry.npmjs.org/) && \
-    echo "patch-package version: $(yarn patch-package --version 2>/dev/null || echo 'using global')"
+    echo "=== 开始安装依赖（跳过 postinstall）===" && \
+    yarn install --frozen-lockfile --production=false --registry https://registry.npmjs.org/ --verbose
+
+# 恢复原始 package.json 并手动应用补丁
+RUN mv package.json.backup package.json && \
+    echo "=== 手动应用 markdown-to-poster 补丁 ===" && \
+    if [ -d "patches" ]; then \
+        echo "发现补丁目录，手动修复..."; \
+        sed -i 's/const { node: u, src: o, \.\.\.l } = a, f = o && `https:\/\/api\.allorigins\.win\/raw\?url=\${encodeURIComponent(o)}`/const { node: u, src: o, ...l } = a, f = o \&\& `\${o}`/g' node_modules/markdown-to-poster/dist/markdown-to-poster.js || echo "补丁应用失败，继续..."; \
+    else \
+        echo "未发现补丁目录，跳过..."; \
+    fi
 
 # 复制源代码
 COPY . .
