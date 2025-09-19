@@ -8,7 +8,7 @@ echo "🚀 将本地修复应用到Docker容器"
 echo "=============================="
 echo ""
 
-IMAGE_NAME="markdown-to-image-serve:latest"
+IMAGE_NAME="markdown-to-image-serve:fix"
 CONTAINER_NAME="markdown-serve-fixed"
 
 # 检查是否存在修复后的文件
