@@ -25,10 +25,11 @@ echo ""
 # 选择构建方式
 echo "请选择构建方式:"
 echo "1. 简单构建 (推荐, 最稳定)"
-echo "2. 标准构建 (功能完整)"
+echo "2. 标准构建 (功能完整)" 
 echo "3. 多阶段构建 (最小镜像)"
+echo "4. 🔥 强制重建 (清除缓存, 解决Registry问题)"
 echo ""
-read -p "请输入选择 (1-3, 默认1): " choice
+read -p "请输入选择 (1-4, 默认1): " choice
 choice=${choice:-1}
 
 case $choice in
@@ -43,6 +44,15 @@ case $choice in
     3)
         echo "🔨 使用多阶段构建方式..."
         DOCKERFILE="Dockerfile.optimized"
+        ;;
+    4)
+        echo "🔥 转到强制重建模式..."
+        echo "   - 这将清除所有Docker缓存"
+        echo "   - 强制重新下载依赖"
+        echo "   - 解决Registry配置问题"
+        echo ""
+        exec ./force-rebuild.sh
+        exit 0
         ;;
     *)
         echo "❌ 无效选择，使用默认选项 (简单构建)"
