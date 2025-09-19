@@ -72,15 +72,30 @@ echo "🔨 开始构建Docker镜像..."
 echo "⏱️  预计需要5-10分钟，请耐心等待..."
 echo ""
 
-# 使用--no-cache确保获取最新代码
-docker build \
-    --no-cache \
-    --platform linux/amd64 \
-    --progress=plain \
-    -f "${DOCKERFILE}" \
-    -t "${FULL_TAG}" \
-    -t "${IMAGE_NAME}:latest" \
-    .
+# 检测 Docker 版本兼容性并构建
+BUILD_ARGS="--no-cache -f ${DOCKERFILE} -t ${FULL_TAG} -t ${IMAGE_NAME}:latest"
+
+# 检查是否支持 --platform 参数
+if docker build --help | grep -q "\--platform"; then
+    echo "ℹ️  添加平台参数: --platform linux/amd64"
+    BUILD_ARGS="${BUILD_ARGS} --platform linux/amd64"
+else
+    echo "ℹ️  跳过 --platform 参数 (Docker 版本较老)"
+fi
+
+# 检查是否支持 --progress 参数
+if docker build --help | grep -q "\--progress"; then
+    echo "ℹ️  添加进度显示: --progress=plain"
+    BUILD_ARGS="${BUILD_ARGS} --progress=plain"
+else
+    echo "ℹ️  跳过 --progress 参数 (Docker 版本较老)"
+fi
+
+echo "🔨 执行构建命令: docker build ${BUILD_ARGS} ."
+echo ""
+
+# 使用兼容性构建命令
+eval "docker build ${BUILD_ARGS} ."
 
 if [ $? -eq 0 ]; then
     echo ""
