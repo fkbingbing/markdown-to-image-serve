@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  app:
+    # 使用现有镜像，无需重新构建
+    image: markdown-to-image-serve:latest
+    platform: linux/amd64
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_BASE_URL=http://localhost:3000
+      # 修复Chrome路径
+      - CHROME_PATH=/usr/bin/chromium
+      - API_PASSWORD=123456
+    volumes:
+      # 🔧 挂载修复后的文件（核心修复）
+      - ./src/components/PosterView.tsx:/app/src/components/PosterView.tsx:ro
+      
+      # 📂 数据目录挂载
+      - ./public/uploads/posters:/app/public/uploads/posters
+      - ./uploads:/app/uploads
+      
+      # 🛠️ 可选：挂载其他修复文件
+      # - ./next.config.mjs:/app/next.config.mjs:ro
+      # - ./.env.local:/app/.env.local:ro
+      
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    container_name: markdown-serve-with-fixes
+
+# 可选：如果需要数据持久化
+volumes:
+  uploads_data:
+  posters_data:
