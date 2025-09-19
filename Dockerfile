@@ -1,8 +1,6 @@
 # 文件：Dockerfile
 FROM wxingheng/node-chrome-base:latest
 
-# 安装 yarn 包管理器
-RUN npm install -g yarn
 
 # Yarn 配置优化
 ENV YARN_REGISTRY=https://registry.npmjs.org/
@@ -22,8 +20,16 @@ ENV NEXT_DISABLE_PWA=true
 # 设置工作目录
 WORKDIR /app
 
+
+
+
 # 复制 package.json 和 yarn.lock
 COPY package.json yarn.lock ./
+
+
+# 安装 yarn 包管理器
+RUN npm install -g yarn
+
 
 # 创建yarn缓存目录并安装依赖
 RUN mkdir -p $YARN_CACHE_FOLDER && \
