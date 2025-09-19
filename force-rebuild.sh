@@ -60,18 +60,7 @@ fi
 echo ""
 echo "🧹 第1步: 清除Docker缓存和相关镜像..."
 
-# 删除相关镜像
-echo "删除相关镜像..."
-docker rmi ${FULL_TAG} 2>/dev/null || echo "  - 镜像 ${FULL_TAG} 不存在，跳过"
-docker rmi ${IMAGE_NAME}:dev 2>/dev/null || echo "  - 镜像 ${IMAGE_NAME}:dev 不存在，跳过"
 
-# 清理构建缓存
-echo "清理构建缓存..."
-docker builder prune -f >/dev/null 2>&1 || true
-
-# 清理系统缓存
-echo "清理系统缓存..."
-docker system prune -f >/dev/null 2>&1 || true
 
 echo "✅ 缓存清理完成"
 echo ""
@@ -111,7 +100,6 @@ echo ""
 if docker build \
     -f ${DOCKERFILE} \
     -t ${FULL_TAG} \
-    ${BUILD_ARGS} \
     . ; then
     
     END_TIME=$(date +%s)
