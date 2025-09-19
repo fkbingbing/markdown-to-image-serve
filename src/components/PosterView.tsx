@@ -51,7 +51,7 @@ export default function PosterView() {
   const customHeight = searchParams?.get('height');
   
   // 解析和验证尺寸参数
-  function parseDimension(value: string | null, defaultValue: number, min: number, max: number): number {
+  function parseDimension(value: string | null | undefined, defaultValue: number, min: number, max: number): number {
     if (!value) return defaultValue;
     const parsed = parseInt(value, 10);
     if (isNaN(parsed)) return defaultValue;
