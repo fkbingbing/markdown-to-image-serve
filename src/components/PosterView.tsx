@@ -28,6 +28,8 @@ const defaultContentMd = `# AI的发展
 export default function PosterView() {
   // 需要根据url参数，作为mdString 的默认值
   const searchParams = useSearchParams()
+  const [posterData, setPosterData] = React.useState<any>(null);
+  const [loading, setLoading] = React.useState(false);
 
   function safeDecodeURIComponent(val: string | null | undefined, fallback: string) {
     if (typeof val !== 'string') return fallback;
@@ -39,16 +41,39 @@ export default function PosterView() {
     }
   }
 
-  const mdString = safeDecodeURIComponent(searchParams?.get('content'), defaultContentMd);
-  const headerString = safeDecodeURIComponent(searchParams?.get('header'), '');
-  const footerString = safeDecodeURIComponent(searchParams?.get('footer'), 'Powered by markdown-to-image-serve.jcommon.top')
+  // 检查是否有dataId参数，如果有则从API获取数据
+  const dataId = searchParams?.get('dataId');
+  
+  React.useEffect(() => {
+    if (dataId) {
+      setLoading(true);
+      fetch(`/api/posterData?dataId=${dataId}`)
+        .then(res => res.json())
+        .then(result => {
+          if (result.data) {
+            setPosterData(result.data);
+          }
+        })
+        .catch(error => {
+          console.error('获取海报数据失败:', error);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
+  }, [dataId]);
+
+  // 如果有posterData，使用API数据；否则使用URL参数
+  const mdString = posterData?.content || safeDecodeURIComponent(searchParams?.get('content'), defaultContentMd);
+  const headerString = posterData?.header || safeDecodeURIComponent(searchParams?.get('header'), '');
+  const footerString = posterData?.footer || safeDecodeURIComponent(searchParams?.get('footer'), 'Powered by markdown-to-image-serve.jcommon.top')
   const logo = ('/logo.png')
-  const logoString = safeDecodeURIComponent(searchParams?.get('logo'), logo);
-  const theme = safeDecodeURIComponent(searchParams?.get('theme'), 'SpringGradientWave');
+  const logoString = posterData?.logo || safeDecodeURIComponent(searchParams?.get('logo'), logo);
+  const theme = posterData?.theme || safeDecodeURIComponent(searchParams?.get('theme'), 'SpringGradientWave');
   
   // 获取自定义宽度和高度参数
-  const customWidth = searchParams?.get('width');
-  const customHeight = searchParams?.get('height');
+  const customWidth = posterData?.width?.toString() || searchParams?.get('width');
+  const customHeight = posterData?.height?.toString() || searchParams?.get('height');
   
   // 解析和验证尺寸参数
   function parseDimension(value: string | null | undefined, defaultValue: number, min: number, max: number): number {
@@ -74,6 +99,17 @@ export default function PosterView() {
     wordWrap: 'break-word' as const,
     overflowWrap: 'break-word' as const,
   };
+
+  // 如果正在加载数据，显示加载状态
+  if (loading) {
+    return (
+      <div className="poster-content" style={containerStyle}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
+          <div>正在加载海报数据...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="poster-content" style={containerStyle}>

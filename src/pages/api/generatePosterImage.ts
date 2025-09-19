@@ -150,24 +150,57 @@ export default async function handler(
     });
     console.timeEnd("setViewport");
 
-    // 本地开发环境
+    // 使用新的API方式避免URL过长问题
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-    const url = buildPosterUrl(
-      '/poster',
-      {
-        content: markdown,
-        header,
-        footer,
-        logo,
-        theme,
-        width: dimensions.width,
-        height: dimensions.height,
+    
+    // 准备海报数据
+    const posterData = {
+      content: markdown,
+      header,
+      footer,
+      logo,
+      theme,
+      width: dimensions.width,
+      height: dimensions.height,
+    };
+
+    let fullUrl: string;
+    
+    // 检查数据长度，如果可能导致URL过长则使用API存储方式
+    const estimatedUrlLength = JSON.stringify(posterData).length * 3; // 估算编码后的长度
+    
+    if (estimatedUrlLength > 1500) {
+      console.log(`数据量较大 (估算${estimatedUrlLength}字符)，使用API存储方式`);
+      
+      // 将数据存储到API
+      const storeResponse = await fetch(`${baseUrl}/api/posterData`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ data: posterData }),
+      });
+      
+      if (!storeResponse.ok) {
+        throw new Error(`API存储失败: ${storeResponse.statusText}`);
       }
-    );
-    const fullUrl = `${baseUrl}${url}`;
+      
+      const { dataId } = await storeResponse.json();
+      fullUrl = `${baseUrl}/poster?dataId=${dataId}`;
+      console.log("使用API存储，dataId:", dataId);
+      
+    } else {
+      console.log("数据量较小，使用直接URL方式");
+      const url = buildPosterUrl('/poster', posterData);
+      fullUrl = `${baseUrl}${url}`;
+    }
+    
     console.log("fullUrl", fullUrl);
     console.time("page.goto");
-    await page.goto(fullUrl);
+    await page.goto(fullUrl, {
+      waitUntil: 'networkidle2',
+      timeout: 30000
+    });
     console.timeEnd("page.goto");
 
     // 调试：截图页面，便于排查元素是否渲染

@@ -19,6 +19,12 @@ services:
       - ./uploads:/app/uploads
       # 挂载依赖修复脚本
       - ./fix-deps.sh:/app/fix-deps.sh:ro
+      # 挂载URL长度修复相关文件
+      - ./src/pages/api/posterData.ts:/app/src/pages/api/posterData.ts:ro
+      - ./src/components/PosterView.tsx:/app/src/components/PosterView.tsx:ro
+      - ./src/pages/api/generatePosterImage.ts:/app/src/pages/api/generatePosterImage.ts:ro
+      # 挂载热修复脚本（可选，用于调试）
+      - ./hotfix-url-length-issue.sh:/app/hotfix-url-length-issue.sh:ro
     # 使用修复脚本启动
     command: ["/app/fix-deps.sh", "yarn", "start"]
     restart: unless-stopped

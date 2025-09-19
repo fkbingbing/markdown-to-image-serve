@@ -63,6 +63,132 @@ fi
 echo ""
 echo "🎉 依赖检查和修复完成!"
 
+# URL长度修复 - 检查并应用必要的文件修复
+echo ""
+echo "🔧 检查URL长度修复..."
+
+# 检查是否需要应用URL长度修复
+apply_url_length_fix() {
+    local need_fix=false
+    
+    # 检查posterData.ts是否存在
+    if [ ! -f "/app/src/pages/api/posterData.ts" ]; then
+        echo "❌ posterData.ts API缺失"
+        need_fix=true
+    fi
+    
+    # 检查PosterView.tsx是否包含dataId处理
+    if ! grep -q "dataId" /app/src/components/PosterView.tsx 2>/dev/null; then
+        echo "❌ PosterView.tsx缺少dataId处理"
+        need_fix=true
+    fi
+    
+    # 检查generatePosterImage.ts是否包含API存储逻辑
+    if ! grep -q "posterData" /app/src/pages/api/generatePosterImage.ts 2>/dev/null; then
+        echo "❌ generatePosterImage.ts缺少API存储逻辑"
+        need_fix=true
+    fi
+    
+    if [ "$need_fix" = true ]; then
+        echo "🔨 应用URL长度修复..."
+        return 0
+    else
+        echo "✅ URL长度修复已存在"
+        return 1
+    fi
+}
+
+if apply_url_length_fix; then
+    # 创建posterData.ts API
+    if [ ! -f "/app/src/pages/api/posterData.ts" ]; then
+        echo "📝 创建posterData.ts API..."
+        cat > /app/src/pages/api/posterData.ts << 'EOF'
+/*
+ * @Author: docker-startup-fix
+ * @Date: 2025-09-19
+ * @Description: 海报数据临时存储API，解决URL过长问题
+ * @FilePath: /app/src/pages/api/posterData.ts
+ */
+import { NextApiRequest, NextApiResponse } from "next";
+
+// 内存中的临时存储（生产环境建议使用Redis等）
+const tempStorage: Record<string, any> = {};
+
+// 清理过期数据（5分钟过期）
+const EXPIRY_TIME = 5 * 60 * 1000; // 5分钟
+
+function cleanExpiredData() {
+  const now = Date.now();
+  Object.keys(tempStorage).forEach(key => {
+    if (tempStorage[key].timestamp < now - EXPIRY_TIME) {
+      delete tempStorage[key];
+    }
+  });
+}
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  // 清理过期数据
+  cleanExpiredData();
+
+  if (req.method === "POST") {
+    // 存储数据
+    const { data } = req.body;
+    if (!data) {
+      return res.status(400).json({ error: "缺少data参数" });
+    }
+
+    const dataId = `poster_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    tempStorage[dataId] = {
+      data,
+      timestamp: Date.now()
+    };
+
+    return res.status(200).json({ dataId });
+    
+  } else if (req.method === "GET") {
+    // 获取数据
+    const { dataId } = req.query;
+    if (!dataId || typeof dataId !== "string") {
+      return res.status(400).json({ error: "缺少dataId参数" });
+    }
+
+    const stored = tempStorage[dataId];
+    if (!stored) {
+      return res.status(404).json({ error: "数据未找到或已过期" });
+    }
+
+    // 返回数据后删除，确保只能使用一次
+    delete tempStorage[dataId];
+    return res.status(200).json({ data: stored.data });
+    
+  } else {
+    return res.status(405).json({ error: "只支持 GET 和 POST 请求" });
+  }
+}
+EOF
+    fi
+    
+    # 应用PosterView.tsx修复 (简化版，只添加关键的dataId处理逻辑)
+    if ! grep -q "dataId" /app/src/components/PosterView.tsx 2>/dev/null; then
+        echo "📝 更新PosterView.tsx以支持dataId..."
+        # 这里我们只做最小化修复，避免完全覆盖文件
+        # 实际的修复会在热修复脚本中完成
+        echo "   (标记需要热修复)"
+    fi
+    
+    # 应用generatePosterImage.ts修复 (简化版，标记需要修复)
+    if ! grep -q "posterData" /app/src/pages/api/generatePosterImage.ts 2>/dev/null; then
+        echo "📝 标记generatePosterImage.ts需要修复..."
+        echo "   (将在热修复脚本中完成)"
+    fi
+    
+    echo "✅ URL长度修复基础设施已就绪"
+    echo "💡 提示：运行 ./hotfix-url-length-issue.sh 完成完整修复"
+fi
+
 # 智能启动模式检测
 echo "🔍 检测启动模式..."
 
