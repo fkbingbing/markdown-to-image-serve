@@ -14,17 +14,17 @@ COPY package.json yarn.lock ./
 
 # 确认yarn可用并安装依赖
 RUN yarn --version && \
-    yarn install --frozen-lockfile --production=false
+    yarn install --frozen-lockfile --production=false --verbose
 
 # 复制源代码
 COPY . .
 
 # 构建应用
-RUN yarn build
+RUN yarn build --verbose
 
 # 清理开发依赖
-RUN yarn install --production --frozen-lockfile && \
-    yarn cache clean
+RUN yarn install --production --frozen-lockfile --verbose && \
+    yarn cache clean --verbose
 
 EXPOSE 3000
 

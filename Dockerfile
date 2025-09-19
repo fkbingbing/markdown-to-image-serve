@@ -38,20 +38,20 @@ RUN yarn --version
 
 
 # 安装依赖
-RUN yarn install --frozen-lockfile --silent
+RUN yarn install --frozen-lockfile --silent --verbose
 
 # 复制应用代码
 COPY . .
 
 # 添加构建超时和错误处理
-RUN timeout 600 yarn build || \
+RUN timeout 600 yarn build --verbose || \
     (echo "Build timeout or failed, trying with reduced parallelism..." && \
      NODE_OPTIONS="--max-old-space-size=6144" yarn build --verbose)
 
 # 清理不必要的文件并保留生产依赖
 RUN rm -rf node_modules/.cache && \
     rm -rf .next/cache && \
-    yarn install --production --frozen-lockfile --silent
+    yarn install --production --frozen-lockfile --silent --verbose
 
 EXPOSE 3000
 
