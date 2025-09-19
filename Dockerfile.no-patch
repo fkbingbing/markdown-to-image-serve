@@ -51,7 +51,7 @@ RUN mv package.json.backup package.json && \
 COPY . .
 
 # 构建应用
-RUN yarn build --verbose
+RUN yarn build
 
 # 清理开发依赖
 RUN yarn install --production --frozen-lockfile --registry https://registry.npmjs.org/ --verbose && \

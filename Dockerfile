@@ -59,9 +59,9 @@ RUN yarn --version && \
 COPY . .
 
 # 添加构建超时和错误处理
-RUN timeout 600 yarn build --verbose || \
+RUN timeout 600 yarn build || \
     (echo "Build timeout or failed, trying with reduced parallelism..." && \
-     NODE_OPTIONS="--max-old-space-size=6144" yarn build --verbose)
+     NODE_OPTIONS="--max-old-space-size=6144" yarn build)
 
 # 清理不必要的文件并保留生产依赖
 RUN rm -rf node_modules/.cache && \
