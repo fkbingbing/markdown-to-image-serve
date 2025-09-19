@@ -3,7 +3,7 @@ version: '0.1'
 services:
   app:
     # 使用本地已构建的镜像 (159250f27fa8, 3.55GB)
-    image: markdown-to-image-serve:latest
+    image: markdown-to-image-serve:fix
     platform: linux/amd64
     ports:
       - "3000:3000"
