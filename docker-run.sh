@@ -48,7 +48,7 @@ mode=${mode:-1}
 
 case $mode in
     1)
-        echo "🚀 前台启动服务..."
+        echo "🚀 前台启动服务（含依赖修复）..."
         echo "💡 按 Ctrl+C 停止服务"
         echo ""
         docker run --rm -it \
@@ -57,10 +57,13 @@ case $mode in
             -e NODE_ENV=production \
             -e NEXT_PUBLIC_BASE_URL=http://localhost:3000 \
             -e CHROME_PATH=/usr/bin/google-chrome-unstable \
-            -e API_PASSWORD=your_secure_password_here \
+            -e API_PASSWORD=123456 \
             -v "$(pwd)/public/uploads/posters:/app/public/uploads/posters" \
             -v "$(pwd)/uploads:/app/uploads" \
-            $IMAGE_NAME
+            -v "$(pwd)/fix-deps.sh:/app/fix-deps.sh:ro" \
+            -v "$(pwd)/package.json:/app/package.json:ro" \
+            $IMAGE_NAME \
+            /app/fix-deps.sh yarn start
         ;;
     2)
         echo "🚀 后台启动服务..."
