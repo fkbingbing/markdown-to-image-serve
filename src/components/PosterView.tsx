@@ -107,6 +107,22 @@ export default function PosterView() {
             overflow-wrap: break-word !important;
             overflow-x: visible !important;
           }
+          /* 修复表格宽度和样式 */
+          .poster-content table {
+            width: 100% !important;
+            max-width: none !important;
+            table-layout: auto !important;
+            border-collapse: collapse !important;
+          }
+          .poster-content th,
+          .poster-content td {
+            max-width: none !important;
+            word-wrap: break-word !important;
+            overflow-wrap: break-word !important;
+            white-space: normal !important;
+            padding: 8px !important;
+            border: 1px solid #ddd !important;
+          }
         `
       }} />
           {/* Preview */}
