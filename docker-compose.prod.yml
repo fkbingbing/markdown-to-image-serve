@@ -10,7 +10,7 @@ services:
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_BASE_URL=http://localhost:3000
-      - CHROME_PATH=/usr/bin/google-chrome-unstable
+      - CHROME_PATH=/usr/bin/chromium
     volumes:
       # 只挂载必要的目录，不挂载源代码
       - ./public/uploads/posters:/tmp/uploads/posters 

@@ -1,17 +1,17 @@
 services:
-  - type: web
-    name: markdown-to-image-serve
-    env: docker
-    region: oregon
-    plan: free
-    dockerfilePath: ./Dockerfile
-    dockerCommand: yarn start
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: NEXT_PUBLIC_BASE_URL
-        value: https://markdown-to-image-serve.onrender.com
-      - key: CHROME_PATH
-        value: /usr/bin/google-chrome-unstable
-    healthCheckPath: /api/hello
-    autoDeploy: true 
+- type: web
+  name: markdown-to-image-serve
+  env: docker
+  region: oregon
+  plan: free
+  dockerfilePath: ./Dockerfile
+  dockerCommand: yarn start
+  envVars:
+  - key: NODE_ENV
+    value: production
+  - key: NEXT_PUBLIC_BASE_URL
+    value: https://markdown-to-image-serve.onrender.com
+  - key: CHROME_PATH
+    value: /usr/bin/chromium
+  healthCheckPath: /api/hello
+  autoDeploy: true

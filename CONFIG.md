@@ -133,7 +133,7 @@ curl -X POST 'http://localhost:3000/api/generatePosterImage' \
 docker run -d \
   -p 3000:3000 \
   -e API_PASSWORD=your_secure_password \
-  -e CHROME_PATH=/usr/bin/google-chrome-unstable \
+  -e CHROME_PATH=/usr/bin/chromium \
   your-image:tag
 ```
 
@@ -146,5 +146,5 @@ services:
       - "3000:3000"
     environment:
       - API_PASSWORD=your_secure_password
-      - CHROME_PATH=/usr/bin/google-chrome-unstable
+      - CHROME_PATH=/usr/bin/chromium
 ```

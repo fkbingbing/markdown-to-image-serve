@@ -123,7 +123,7 @@ docker run -d -p 3000:3000 \
 docker run -d -p 3000:3000 \
   -e API_PASSWORD=your_secure_password \
   -e NEXT_PUBLIC_BASE_URL=http://localhost:3000 \
-  -e CHROME_PATH=/usr/bin/google-chrome-unstable \
+  -e CHROME_PATH=/usr/bin/chromium \
   --name markdown-service \
   markdown-to-image-serve:latest
 ```

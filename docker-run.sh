@@ -56,7 +56,7 @@ case $mode in
             -p 3000:3000 \
             -e NODE_ENV=production \
             -e NEXT_PUBLIC_BASE_URL=http://localhost:3000 \
-            -e CHROME_PATH=/usr/bin/google-chrome-unstable \
+            -e CHROME_PATH=/usr/bin/chromium \
             -e API_PASSWORD=123456 \
             -v "$(pwd)/public/uploads/posters:/app/public/uploads/posters" \
             -v "$(pwd)/uploads:/app/uploads" \
@@ -72,7 +72,7 @@ case $mode in
             --restart unless-stopped \
             -e NODE_ENV=production \
             -e NEXT_PUBLIC_BASE_URL=http://localhost:3000 \
-            -e CHROME_PATH=/usr/bin/google-chrome-unstable \
+            -e CHROME_PATH=/usr/bin/chromium \
             -e API_PASSWORD=123456 \
             -v "$(pwd)/public/uploads/posters:/app/public/uploads/posters" \
             -v "$(pwd)/uploads:/app/uploads" \
