@@ -6,9 +6,11 @@ FROM wxingheng/node-chrome-base:latest AS dependencies
 ENV NPM_CONFIG_REGISTRY=https://registry.npmjs.org/
 ENV YARN_REGISTRY=https://registry.npmjs.org/
 
-# 检查yarn并配置官方源
+# 检查yarn并清除镜像源配置，强制官方源
 RUN yarn --version && \
+    rm -f /root/.npmrc /usr/local/share/.yarnrc /usr/local/etc/npmrc && \
     yarn config set registry https://registry.npmjs.org/ && \
+    npm config set registry https://registry.npmjs.org/ && \
     yarn config list
 
 # 设置工作目录
@@ -47,9 +49,11 @@ RUN echo "开始构建..." && \
 # Stage 3: 生产镜像
 FROM wxingheng/node-chrome-base:latest AS production
 
-# 检查yarn并配置官方源 (基础镜像已预装)
+# 检查yarn并清除镜像源配置，强制官方源 (基础镜像已预装)
 RUN yarn --version && \
-    yarn config set registry https://registry.npmjs.org/
+    rm -f /root/.npmrc /usr/local/share/.yarnrc /usr/local/etc/npmrc && \
+    yarn config set registry https://registry.npmjs.org/ && \
+    npm config set registry https://registry.npmjs.org/
 
 # 设置工作目录
 WORKDIR /app
