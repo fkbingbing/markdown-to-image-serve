@@ -17,10 +17,16 @@ services:
       - ./public/uploads/posters:/app/public/uploads/posters
       # 上传目录挂载
       - ./uploads:/app/uploads
+      # 挂载依赖修复脚本
+      - ./fix-deps.sh:/app/fix-deps.sh:ro
+      # 挂载更新的 package.json (包含修复的依赖)
+      - ./package.json:/app/package.json:ro
+    # 使用修复脚本启动
+    command: ["/app/fix-deps.sh", "yarn", "start"]
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/api/hello.js"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 60s
