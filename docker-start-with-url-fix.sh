@@ -32,13 +32,13 @@ echo ""
 
 # 停止现有容器（如果存在）
 echo "🛑 停止现有容器..."
-docker-compose down 2>/dev/null || true
+docker compose down 2>/dev/null || true
 
 echo ""
 echo "🚀 启动容器（应用修复）..."
 
 # 使用docker-compose启动（已配置volume挂载）
-docker-compose up -d
+docker compose up -d
 
 echo "✅ 容器启动中..."
 echo ""
