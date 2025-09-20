@@ -92,29 +92,37 @@ fix_puppeteer_network() {
 }
 
 if fix_puppeteer_network; then
-    echo "📝 修复generatePosterImage.ts网络连接..."
+    echo "📝 修复Puppeteer网络连接..."
     
-    # 修复generatePosterImage.ts
-    if [ -f "/app/src/pages/api/generatePosterImage.ts" ]; then
-        # 备份原文件
-        cp /app/src/pages/api/generatePosterImage.ts /app/src/pages/api/generatePosterImage.ts.backup.$(date +%Y%m%d_%H%M%S)
+    # 使用更安全的方法：创建临时文件然后替换
+    fix_file_safely() {
+        local file_path="$1"
+        local temp_file="/tmp/$(basename "$file_path").tmp"
         
-        # 替换localhost:3000为127.0.0.1:3000
-        sed -i 's#const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";#const baseUrl = process.env.INTERNAL_BASE_URL || process.env.NEXT_PUBLIC_BASE_URL || "http://127.0.0.1:3000";#' /app/src/pages/api/generatePosterImage.ts
-        
-        echo "✅ generatePosterImage.ts修复完成"
-    fi
+        if [ -f "$file_path" ]; then
+            echo "  修复文件: $(basename "$file_path")"
+            
+            # 使用cat和重定向创建新文件
+            cat "$file_path" | sed 's#const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";#const baseUrl = process.env.INTERNAL_BASE_URL || process.env.NEXT_PUBLIC_BASE_URL || "http://127.0.0.1:3000";#' > "$temp_file"
+            
+            # 检查文件是否成功创建
+            if [ -f "$temp_file" ] && [ -s "$temp_file" ]; then
+                # 备份原文件
+                cp "$file_path" "$file_path.backup.$(date +%Y%m%d_%H%M%S)"
+                
+                # 替换原文件
+                mv "$temp_file" "$file_path"
+                echo "  ✅ $(basename "$file_path")修复完成"
+            else
+                echo "  ❌ $(basename "$file_path")修复失败"
+                rm -f "$temp_file"
+            fi
+        fi
+    }
     
-    # 修复generatePoster.ts
-    if [ -f "/app/src/pages/api/generatePoster.ts" ]; then
-        # 备份原文件
-        cp /app/src/pages/api/generatePoster.ts /app/src/pages/api/generatePoster.ts.backup.$(date +%Y%m%d_%H%M%S)
-        
-        # 替换localhost:3000为127.0.0.1:3000
-        sed -i 's#const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";#const baseUrl = process.env.INTERNAL_BASE_URL || process.env.NEXT_PUBLIC_BASE_URL || "http://127.0.0.1:3000";#' /app/src/pages/api/generatePoster.ts
-        
-        echo "✅ generatePoster.ts修复完成"
-    fi
+    # 修复两个文件
+    fix_file_safely "/app/src/pages/api/generatePosterImage.ts"
+    fix_file_safely "/app/src/pages/api/generatePoster.ts"
     
     echo "✅ Puppeteer网络连接修复完成"
     echo "💡 现在Puppeteer将使用127.0.0.1:3000连接内部服务"

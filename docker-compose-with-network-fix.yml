@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  app:
+    # 使用本地已构建的镜像
+    image: markdown-to-image-serve:latest
+    platform: linux/amd64
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_BASE_URL=http://localhost:3000
+      - INTERNAL_BASE_URL=http://127.0.0.1:3000
+      - CHROME_PATH=/usr/bin/chromium
+      - API_PASSWORD=123456
+    volumes:
+      # 生成的海报图片目录挂载
+      - ./public/uploads/posters:/app/public/uploads/posters
+      # 上传目录挂载
+      - ./uploads:/app/uploads
+      # 挂载修复后的API文件（网络连接修复）
+      - ./src/pages/api/generatePosterImage.ts:/app/src/pages/api/generatePosterImage.ts:ro
+      - ./src/pages/api/generatePoster.ts:/app/src/pages/api/generatePoster.ts:ro
+      # 挂载依赖修复脚本
+      - ./fix-deps.sh:/app/fix-deps.sh:ro
+      # 挂载URL长度修复相关文件
+      - ./src/pages/api/posterData.ts:/app/src/pages/api/posterData.ts:ro
+      - ./src/components/PosterView.tsx:/app/src/components/PosterView.tsx:ro
+    # 使用修复脚本启动
+    command: ["/app/fix-deps.sh", "yarn", "start"]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/hello"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
