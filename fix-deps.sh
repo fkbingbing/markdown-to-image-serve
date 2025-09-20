@@ -100,7 +100,7 @@ if fix_puppeteer_network; then
         cp /app/src/pages/api/generatePosterImage.ts /app/src/pages/api/generatePosterImage.ts.backup.$(date +%Y%m%d_%H%M%S)
         
         # 替换localhost:3000为127.0.0.1:3000
-        sed -i 's|const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";|const baseUrl = process.env.INTERNAL_BASE_URL || process.env.NEXT_PUBLIC_BASE_URL || "http://127.0.0.1:3000";|' /app/src/pages/api/generatePosterImage.ts
+        sed -i 's#const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";#const baseUrl = process.env.INTERNAL_BASE_URL || process.env.NEXT_PUBLIC_BASE_URL || "http://127.0.0.1:3000";#' /app/src/pages/api/generatePosterImage.ts
         
         echo "✅ generatePosterImage.ts修复完成"
     fi
@@ -111,7 +111,7 @@ if fix_puppeteer_network; then
         cp /app/src/pages/api/generatePoster.ts /app/src/pages/api/generatePoster.ts.backup.$(date +%Y%m%d_%H%M%S)
         
         # 替换localhost:3000为127.0.0.1:3000
-        sed -i 's|const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";|const baseUrl = process.env.INTERNAL_BASE_URL || process.env.NEXT_PUBLIC_BASE_URL || "http://127.0.0.1:3000";|' /app/src/pages/api/generatePoster.ts
+        sed -i 's#const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";#const baseUrl = process.env.INTERNAL_BASE_URL || process.env.NEXT_PUBLIC_BASE_URL || "http://127.0.0.1:3000";#' /app/src/pages/api/generatePoster.ts
         
         echo "✅ generatePoster.ts修复完成"
     fi
