@@ -2,7 +2,7 @@ version: '0.1'
 
 services:
   app:
-    image: wxingheng/markdown-to-image-serve:0.0.1
+    image: markdown-to-image-serve:latest
     # 指定平台 amd64 架构 （Mac Apple Silicon 平台）
     platform: linux/amd64
     ports:
