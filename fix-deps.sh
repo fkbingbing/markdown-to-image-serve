@@ -63,6 +63,63 @@ fi
 echo ""
 echo "🎉 依赖检查和修复完成!"
 
+# Puppeteer网络连接修复
+echo ""
+echo "🔧 检查Puppeteer网络连接配置..."
+
+# 检查并修复generatePosterImage.ts中的网络连接问题
+fix_puppeteer_network() {
+    local need_fix=false
+    
+    # 检查是否使用localhost:3000
+    if grep -q "http://localhost:3000" /app/src/pages/api/generatePosterImage.ts 2>/dev/null; then
+        echo "❌ generatePosterImage.ts使用localhost:3000"
+        need_fix=true
+    fi
+    
+    if grep -q "http://localhost:3000" /app/src/pages/api/generatePoster.ts 2>/dev/null; then
+        echo "❌ generatePoster.ts使用localhost:3000"
+        need_fix=true
+    fi
+    
+    if [ "$need_fix" = true ]; then
+        echo "🔨 应用Puppeteer网络连接修复..."
+        return 0
+    else
+        echo "✅ Puppeteer网络连接配置正确"
+        return 1
+    fi
+}
+
+if fix_puppeteer_network; then
+    echo "📝 修复generatePosterImage.ts网络连接..."
+    
+    # 修复generatePosterImage.ts
+    if [ -f "/app/src/pages/api/generatePosterImage.ts" ]; then
+        # 备份原文件
+        cp /app/src/pages/api/generatePosterImage.ts /app/src/pages/api/generatePosterImage.ts.backup.$(date +%Y%m%d_%H%M%S)
+        
+        # 替换localhost:3000为127.0.0.1:3000
+        sed -i 's|const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";|const baseUrl = process.env.INTERNAL_BASE_URL || process.env.NEXT_PUBLIC_BASE_URL || "http://127.0.0.1:3000";|' /app/src/pages/api/generatePosterImage.ts
+        
+        echo "✅ generatePosterImage.ts修复完成"
+    fi
+    
+    # 修复generatePoster.ts
+    if [ -f "/app/src/pages/api/generatePoster.ts" ]; then
+        # 备份原文件
+        cp /app/src/pages/api/generatePoster.ts /app/src/pages/api/generatePoster.ts.backup.$(date +%Y%m%d_%H%M%S)
+        
+        # 替换localhost:3000为127.0.0.1:3000
+        sed -i 's|const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";|const baseUrl = process.env.INTERNAL_BASE_URL || process.env.NEXT_PUBLIC_BASE_URL || "http://127.0.0.1:3000";|' /app/src/pages/api/generatePoster.ts
+        
+        echo "✅ generatePoster.ts修复完成"
+    fi
+    
+    echo "✅ Puppeteer网络连接修复完成"
+    echo "💡 现在Puppeteer将使用127.0.0.1:3000连接内部服务"
+fi
+
 # URL长度修复 - 检查并应用必要的文件修复
 echo ""
 echo "🔧 检查URL长度修复..."

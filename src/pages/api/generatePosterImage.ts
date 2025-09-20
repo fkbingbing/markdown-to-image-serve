@@ -151,7 +151,8 @@ export default async function handler(
     console.timeEnd("setViewport");
 
     // 使用新的API方式避免URL过长问题
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+    // 在Docker容器内使用127.0.0.1而不是localhost
+    const baseUrl = process.env.INTERNAL_BASE_URL || process.env.NEXT_PUBLIC_BASE_URL || "http://127.0.0.1:3000";
     
     // 准备海报数据
     const posterData = {

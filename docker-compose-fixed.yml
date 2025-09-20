@@ -1,8 +1,8 @@
-version: '0.1'
+version: '3.8'
 
 services:
   app:
-    # 使用本地已构建的镜像 (159250f27fa8, 3.55GB)
+    # 使用本地已构建的镜像
     image: markdown-to-image-serve:latest
     platform: linux/amd64
     ports:
@@ -18,19 +18,21 @@ services:
       - ./public/uploads/posters:/app/public/uploads/posters
       # 上传目录挂载
       - ./uploads:/app/uploads
+      # 挂载修复后的API文件
+      - ./src/pages/api/generatePosterImage.ts:/app/src/pages/api/generatePosterImage.ts:ro
+      - ./src/pages/api/generatePoster.ts:/app/src/pages/api/generatePoster.ts:ro
       # 挂载依赖修复脚本
       - ./fix-deps.sh:/app/fix-deps.sh:ro
       # 挂载URL长度修复相关文件
       - ./src/pages/api/posterData.ts:/app/src/pages/api/posterData.ts:ro
       - ./src/components/PosterView.tsx:/app/src/components/PosterView.tsx:ro
-      - ./src/pages/api/generatePosterImage.ts:/app/src/pages/api/generatePosterImage.ts:ro
-      # 挂载热修复脚本（可选，用于调试）
-      - ./hotfix-url-length-issue.sh:/app/hotfix-url-length-issue.sh:ro
+      # 挂载热修复脚本
+      - ./hotfix-puppeteer-network.sh:/app/hotfix-puppeteer-network.sh:ro
     # 使用修复脚本启动
     command: ["/app/fix-deps.sh", "yarn", "start"]
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/hello.js"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/hello"]
       interval: 30s
       timeout: 10s
       retries: 3
