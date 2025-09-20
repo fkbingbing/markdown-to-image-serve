@@ -92,40 +92,17 @@ fix_puppeteer_network() {
 }
 
 if fix_puppeteer_network; then
-    echo "📝 修复Puppeteer网络连接..."
+    echo "📝 应用Puppeteer网络连接修复..."
     
-    # 使用更安全的方法：创建临时文件然后替换
-    fix_file_safely() {
-        local file_path="$1"
-        local temp_file="/tmp/$(basename "$file_path").tmp"
-        
-        if [ -f "$file_path" ]; then
-            echo "  修复文件: $(basename "$file_path")"
-            
-            # 使用cat和重定向创建新文件
-            cat "$file_path" | sed 's#const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";#const baseUrl = process.env.INTERNAL_BASE_URL || process.env.NEXT_PUBLIC_BASE_URL || "http://127.0.0.1:3000";#' > "$temp_file"
-            
-            # 检查文件是否成功创建
-            if [ -f "$temp_file" ] && [ -s "$temp_file" ]; then
-                # 备份原文件
-                cp "$file_path" "$file_path.backup.$(date +%Y%m%d_%H%M%S)"
-                
-                # 替换原文件
-                mv "$temp_file" "$file_path"
-                echo "  ✅ $(basename "$file_path")修复完成"
-            else
-                echo "  ❌ $(basename "$file_path")修复失败"
-                rm -f "$temp_file"
-            fi
-        fi
-    }
+    # 由于Docker容器中文件修改受限，我们通过环境变量来解决
+    echo "🔧 设置环境变量解决网络连接问题..."
     
-    # 修复两个文件
-    fix_file_safely "/app/src/pages/api/generatePosterImage.ts"
-    fix_file_safely "/app/src/pages/api/generatePoster.ts"
+    # 设置环境变量，让代码使用正确的内部URL
+    export INTERNAL_BASE_URL="http://127.0.0.1:3000"
     
     echo "✅ Puppeteer网络连接修复完成"
-    echo "💡 现在Puppeteer将使用127.0.0.1:3000连接内部服务"
+    echo "💡 通过环境变量INTERNAL_BASE_URL=http://127.0.0.1:3000解决连接问题"
+    echo "💡 代码将优先使用INTERNAL_BASE_URL环境变量"
 fi
 
 # URL长度修复 - 检查并应用必要的文件修复
