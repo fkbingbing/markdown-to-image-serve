@@ -89,7 +89,7 @@ export default function PosterView() {
   // 根据宽度判断应该使用的尺寸
   const posterSize = posterWidth >= 1000 ? 'desktop' : posterWidth >= 700 ? 'tablet' : 'mobile';
   
-  // 动态计算样式
+  // 动态计算样式，添加10px留白
   const containerStyle = {
     display: "inline-block" as const,
     width: posterWidth + 'px',
@@ -98,6 +98,8 @@ export default function PosterView() {
     // 移除maxWidth限制，避免文本截断
     wordWrap: 'break-word' as const,
     overflowWrap: 'break-word' as const,
+    padding: '10px', // 添加10px留白
+    boxSizing: 'border-box' as const,
   };
 
   // 如果正在加载数据，显示加载状态
@@ -113,24 +115,63 @@ export default function PosterView() {
 
   return (
     <div className="poster-content" style={containerStyle}>
-      {/* 强制覆盖 Md2Poster 组件的宽度限制 */}
+      {/* 强制覆盖 Md2Poster 组件的宽度限制，彻底消除所有留白 */}
       <style dangerouslySetInnerHTML={{
         __html: `
+          /* 全局重置，确保所有元素都使用border-box */
+          .poster-content,
+          .poster-content *,
+          .poster-content *::before,
+          .poster-content *::after {
+            box-sizing: border-box !important;
+          }
+          
+          /* 强制设置根容器宽度，添加10px留白 */
+          .poster-content {
+            width: ${posterWidth}px !important;
+            min-width: ${posterWidth}px !important;
+            max-width: ${posterWidth}px !important;
+            margin: 0 !important;
+            padding: 10px !important;
+            overflow: visible !important;
+            box-sizing: border-box !important;
+          }
+          
+          /* 强制覆盖所有可能的markdown-to-poster组件样式，适应10px留白 */
           .poster-content .md2-poster,
           .poster-content .md2-poster > div,
           .poster-content .md2-poster-content,
-          .poster-content [class*="poster"] {
+          .poster-content [class*="poster"],
+          .poster-content [class*="md2"],
+          .poster-content [class*="container"],
+          .poster-content [class*="wrapper"] {
             max-width: none !important;
-            width: ${posterWidth}px !important;
+            width: ${posterWidth - 20}px !important; /* 减去左右各10px */
+            min-width: ${posterWidth - 20}px !important;
+            margin: 0 !important;
+            padding: 0 !important;
             box-sizing: border-box !important;
+            overflow: visible !important;
           }
+          
+          /* 确保内容区域完全填充，覆盖所有可能的内部容器 */
+          .poster-content .md2-poster-content,
           .poster-content .md2-poster-content > div,
-          .poster-content .md2-poster-content * {
+          .poster-content .md2-poster-content > *,
+          .poster-content .md2-poster-content *,
+          .poster-content [class*="content"],
+          .poster-content [class*="main"] {
             max-width: none !important;
+            width: 100% !important;
+            min-width: 100% !important;
             word-wrap: break-word !important;
             overflow-wrap: break-word !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            box-sizing: border-box !important;
           }
-          /* 修复代码块宽度限制 - 这是关键修复 */
+          
+          /* 修复代码块宽度限制 */
           .poster-content pre,
           .poster-content code,
           .poster-content .hljs,
@@ -138,18 +179,28 @@ export default function PosterView() {
           .poster-content [class*="highlight"] {
             max-width: none !important;
             width: 100% !important;
+            min-width: 100% !important;
             white-space: pre-wrap !important;
             word-wrap: break-word !important;
             overflow-wrap: break-word !important;
             overflow-x: visible !important;
+            margin: 0 !important;
+            padding: 8px !important;
+            box-sizing: border-box !important;
           }
-          /* 修复表格宽度和样式 */
+          
+          /* 修复表格宽度和样式，确保完全填充 */
           .poster-content table {
             width: 100% !important;
             max-width: none !important;
+            min-width: 100% !important;
             table-layout: auto !important;
             border-collapse: collapse !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            box-sizing: border-box !important;
           }
+          
           .poster-content th,
           .poster-content td {
             max-width: none !important;
@@ -158,6 +209,64 @@ export default function PosterView() {
             white-space: normal !important;
             padding: 8px !important;
             border: 1px solid #ddd !important;
+            margin: 0 !important;
+            box-sizing: border-box !important;
+          }
+          
+          /* 确保段落和标题没有额外边距，完全填充宽度 */
+          .poster-content p,
+          .poster-content h1,
+          .poster-content h2,
+          .poster-content h3,
+          .poster-content h4,
+          .poster-content h5,
+          .poster-content h6 {
+            margin: 0 !important;
+            padding: 0 !important;
+            max-width: none !important;
+            width: 100% !important;
+            min-width: 100% !important;
+            box-sizing: border-box !important;
+          }
+          
+          /* 确保列表没有额外边距 */
+          .poster-content ul,
+          .poster-content ol {
+            margin: 0 !important;
+            padding-left: 20px !important;
+            max-width: none !important;
+            width: 100% !important;
+            min-width: 100% !important;
+            box-sizing: border-box !important;
+          }
+          
+          .poster-content li {
+            margin: 0 !important;
+            padding: 0 !important;
+            max-width: none !important;
+            width: 100% !important;
+            min-width: 100% !important;
+            box-sizing: border-box !important;
+          }
+          
+          /* 确保所有可能的容器都完全填充 */
+          .poster-content div,
+          .poster-content section,
+          .poster-content article {
+            max-width: none !important;
+            width: 100% !important;
+            min-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            box-sizing: border-box !important;
+          }
+          
+          /* 强制覆盖任何可能的flex或grid布局限制 */
+          .poster-content [style*="max-width"],
+          .poster-content [style*="width"] {
+            max-width: none !important;
+            width: 100% !important;
+            min-width: 100% !important;
           }
         `
       }} />

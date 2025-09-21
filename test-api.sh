@@ -3,7 +3,7 @@
 set -e
 
 # 配置
-API_BASE_URL="http://10.71.2.253:3000"
+API_BASE_URL="http://localhost:3000"
 API_PASSWORD="123456"
 
 echo "🧪 测试 markdown-to-image-serve API"

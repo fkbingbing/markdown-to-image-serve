@@ -209,55 +209,75 @@ export default async function handler(
 
     try {
       console.time("waitForSelector");
-      // 等待海报元素渲染完成
-      await page.waitForSelector(".poster-content", { timeout: 10000 });
+      // 等待海报元素渲染完成，增加超时时间
+      await page.waitForSelector(".poster-content", { timeout: 30000 });
       console.timeEnd("waitForSelector");
     } catch (e) {
+      console.log("⚠️ waitForSelector超时，尝试继续处理...");
       // 超时时输出页面 HTML 便于排查
-      // const html = await page.content();
-      // fs.writeFileSync('debug-timeout.html', html);
-      // await page.screenshot({ path: 'debug-timeout.png' });
-      throw e;
+      const html = await page.content();
+      fs.writeFileSync('/tmp/debug-timeout.html', html);
+      await page.screenshot({ path: '/tmp/debug-timeout.png' });
+      console.log("📋 调试文件已保存: /tmp/debug-timeout.html, /tmp/debug-timeout.png");
+      
+      // 尝试继续处理，即使没有找到元素
+      console.log("🔄 尝试继续处理...");
     }
     
     // 等待所有图片加载完成
     console.time("waitImages");
-    const imagesLoadTime = await page.evaluate(() => {
-      // 只统计未加载完成的图片
-      const notLoadedImgs = Array.from(document.images).filter(img => !img.complete);
-      const loadPromises = notLoadedImgs.map(img => {
-        const start = performance.now();
-        return new Promise(resolve => {
-          img.onload = img.onerror = () => {
-            const end = performance.now();
-            resolve({
-              src: img.src,
-              loadTime: end - start
-            });
-          };
+    try {
+      const imagesLoadTime = await page.evaluate(() => {
+        // 只统计未加载完成的图片
+        const notLoadedImgs = Array.from(document.images).filter(img => !img.complete);
+        const loadPromises = notLoadedImgs.map(img => {
+          const start = performance.now();
+          return new Promise(resolve => {
+            img.onload = img.onerror = () => {
+              const end = performance.now();
+              resolve({
+                src: img.src,
+                loadTime: end - start
+              });
+            };
+          });
         });
+        // 已经加载完成的图片也返回
+        const loadedImgs = Array.from(document.images)
+          .filter(img => img.complete)
+          .map(img => ({
+            src: img.src,
+            loadTime: 0
+          }));
+        return Promise.all(loadPromises).then(results => [...loadedImgs, ...results]);
       });
-      // 已经加载完成的图片也返回
-      const loadedImgs = Array.from(document.images)
-        .filter(img => img.complete)
-        .map(img => ({
-          src: img.src,
-          loadTime: 0
-        }));
-      return Promise.all(loadPromises).then(results => [...loadedImgs, ...results]);
-    });
-    imagesLoadTime.forEach(img => {
-      console.log(`图片: ${img.src} 加载用时: ${img.loadTime.toFixed(2)} ms`);
-    });
+      imagesLoadTime.forEach(img => {
+        console.log(`图片: ${img.src} 加载用时: ${img.loadTime.toFixed(2)} ms`);
+      });
+    } catch (e) {
+      console.log("⚠️ 图片加载统计失败，继续处理...");
+    }
     console.timeEnd("waitImages");
 
     // 获取元素
     console.time("getPosterElement");
-    const element = await page.$(".poster-content");
+    let element = await page.$(".poster-content");
+    
+    // 如果没找到元素，尝试其他选择器
+    if (!element) {
+      console.log("⚠️ 未找到.poster-content，尝试其他选择器...");
+      element = await page.$(".poster") || await page.$("main") || await page.$("body");
+    }
+    
     console.timeEnd("getPosterElement");
 
     if (!element) {
-      throw new Error("Poster element not found");
+      console.log("❌ 未找到任何可用的海报元素");
+      // 保存调试信息
+      const html = await page.content();
+      fs.writeFileSync('/tmp/debug-no-element.html', html);
+      await page.screenshot({ path: '/tmp/debug-no-element.png' });
+      throw new Error("Poster element not found - 调试文件已保存");
     }
 
     // 获取元素的边界框
@@ -281,15 +301,15 @@ export default async function handler(
       fs.mkdirSync(saveDir, { recursive: true });
     }
 
-    // 只截取特定元素
+    // 使用元素的实际渲染尺寸进行截图，确保内容完整
     console.time("screenshot");
     await page.screenshot({
       path: savePath,
       clip: {
         x: box.x,
         y: box.y,
-        width: box.width,
-        height: box.height,
+        width: box.width,   // 使用元素实际宽度
+        height: box.height, // 使用元素实际高度
       },
     });
     console.timeEnd("screenshot");
